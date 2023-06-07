@@ -51,7 +51,7 @@ class Network:
             self.__layers.append(Layer(input_dim=input_l_dim, output_dim=output_l_dim))
             self.__layers.append(activation())
 
-        self.__layers.append(Sigmoid())
+        self.__layers[-1] = Sigmoid()
 
     def forward(self, x: np.ndarray) -> np.ndarray:
         for f in self.__layers:
