@@ -1,23 +1,18 @@
-from typing import Tuple
 from random import shuffle
 
-from numpy import ndarray
-
-from src.data_parser import load_data_file
+from src.data_parser import load_data_file, DataItem
 
 
 class Dataset:
     def __init__(self, data_filepath: str, should_shuffle: bool = False):
-        self.__samples, self.__labels = load_data_file(data_filepath)
+        self.__items = load_data_file(data_filepath)
         self.__should_shuffle = should_shuffle
 
     def __len__(self) -> int:
-        return len(self.__samples)
+        return len(self.__items)
 
-    def __getitem__(self, item) -> Tuple[ndarray, int]:
-        return self.__samples[item], self.__labels[item]
+    def __getitem__(self, item) -> DataItem:
+        return self.__items[item]
 
     def shuffle(self):
-        temp = list(zip(self.__samples, self.__labels))
-        shuffle(temp)
-        self.__samples, self.__labels = zip(*temp)
+        shuffle(self.__items)
