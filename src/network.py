@@ -1,22 +1,29 @@
+from enum import StrEnum
 from typing import List
 from abc import ABC
 import json
-
 import numpy as np
+
+class ActivationFunctionType(StrEnum):
+    RELU = 'relu'
+    SIGMOID = 'sigmoid'
 
 
 class ActivationFunction(ABC):
+    def __init__(self, type: ActivationFunctionType) -> None:
+        super().__init__()
+        self.__type = type
+
     def __call__(self, x: np.ndarray):
         raise NotImplemented
-
-    def to_JSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__,
-                          sort_keys=True, indent=4)
+    
+    def __str__(self) -> str:
+        return self.__type
 
 
 class ReLU(ActivationFunction):
-    def __init__(self):
-        pass
+    def __init__(self) -> None:
+        super().__init__(ActivationFunctionType.RELU)
 
     def __call__(self, x: np.ndarray) -> np.ndarray:
         return np.maximum(0, x)
@@ -24,7 +31,7 @@ class ReLU(ActivationFunction):
 
 class Sigmoid(ActivationFunction):
     def __init__(self):
-        pass
+        super().__init__(ActivationFunctionType.SIGMOID)
 
     def __call__(self, x: np.ndarray) -> np.ndarray:
         return 1 / (1 - np.e ** -x)
@@ -79,7 +86,7 @@ class Network:
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump({
                 'weight': [l.to_JSON() for l in self._layers],
-                'activation': [a.to_JSON() for a in self._activations]
+                'activation': [str(a) for a in self._activations]
             }, f)
 
     def load_network(self, filepath: str):
