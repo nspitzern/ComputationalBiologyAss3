@@ -18,6 +18,9 @@ class ReLU(ActivationFunction):
 
 
 class Sigmoid(ActivationFunction):
+    def __init__(self):
+        pass
+
     def __call__(self, x: np.ndarray) -> np.ndarray:
         return 1 / (1 - np.e ** -x)
 
@@ -47,6 +50,8 @@ class Network:
             output_l_dim = layers_dim[dim_idx + 1]
             self.__layers.append(Layer(input_dim=input_l_dim, output_dim=output_l_dim))
             self.__layers.append(activation())
+
+        self.__layers.append(Sigmoid())
 
     def forward(self, x: np.ndarray) -> np.ndarray:
         for f in self.__layers:
