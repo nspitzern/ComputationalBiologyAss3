@@ -1,5 +1,3 @@
-from typing import List
-
 from src.dataset import Dataset
 from src.genetic_algo.sample import Sample
 
