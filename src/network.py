@@ -41,6 +41,7 @@ class BatchNorm:
 class Layer:
     def __init__(self, input_dim, output_dim):
         self.weights: np.ndarray = np.random.random(size=(input_dim, output_dim))
+        self.shape = self.weights.shape
 
     def __call__(self, x: np.ndarray) -> np.ndarray:
         return x @ self.weights
