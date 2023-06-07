@@ -59,21 +59,25 @@ class Layer:
 
 class Network:
     def __init__(self, layers_dim: List[int], activations: List[ActivationFunction]):
-        self._layers = []
-        self._activations = []
+        self.__layers = []
+        self.__activations = []
 
         for dim_idx in range(len(layers_dim) - 1):
             input_l_dim = layers_dim[dim_idx]
             output_l_dim = layers_dim[dim_idx + 1]
-            self._layers.append(Layer(input_dim=input_l_dim, output_dim=output_l_dim))
+            self.__layers.append(Layer(input_dim=input_l_dim, output_dim=output_l_dim))
 
         for activation in activations:
-            self._activations.append(activation())
+            self.__activations.append(activation())
 
-        self._activations.append(Sigmoid())
+        self.__activations.append(Sigmoid())
+
+    @property
+    def layers(self):
+        return self.__layers
 
     def forward(self, x: np.ndarray) -> np.ndarray:
-        for f, a in zip(self._layers, self._activations):
+        for f, a in zip(self.__layers, self.__activations):
             x = f(x)
             x = a(x)
 
@@ -81,28 +85,22 @@ class Network:
 
     def __call__(self, x: np.ndarray) -> np.ndarray:
         return self.forward(x)
+    
+    def __getitem__(self, item):
+        return self.__layers[item]
+    
+    def __setitem__(self, key, value):
+        self.__layers[key] = value
+    
+    def __len__(self):
+        return len(self.__layers)
 
     def save_network(self, filepath: str):
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump({
-                'weight': [l.to_JSON() for l in self._layers],
-                'activation': [str(a) for a in self._activations]
+                'weight': [l.to_JSON() for l in self.__layers],
+                'activation': [str(a) for a in self.__activations]
             }, f)
 
     def load_network(self, filepath: str):
         pass
-
-
-class DynamicNetwork(Network):
-    def __init__(self, layers_dim: List[int], activation: ActivationFunction):
-        super().__init__(layers_dim, activation)
-    
-    @property
-    def layers(self):
-        return self._layers
-    
-    def __getitem__(self, item):
-        return self._layers[item]
-    
-    def __setitem__(self, key, value):
-        self._layers[key] = value
