@@ -91,3 +91,18 @@ class Network:
 
     def load_network(self, filepath: str):
         pass
+
+
+class DynamicNetwork(Network):
+    def __init__(self, layers_dim: List[int], activation: ActivationFunction):
+        super().__init__(layers_dim, activation)
+    
+    @property
+    def layers(self):
+        return self._layers
+    
+    def __getitem__(self, item):
+        return self._layers[item]
+    
+    def __setitem__(self, key, value):
+        self._layers[key] = value
