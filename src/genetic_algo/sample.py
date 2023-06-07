@@ -23,3 +23,6 @@ class Sample:
     
     def __len__(self):
         return len(self.__network)
+    
+    def __call__(self, x: np.ndarray) -> np.ndarray:
+        return self.__network(x)
