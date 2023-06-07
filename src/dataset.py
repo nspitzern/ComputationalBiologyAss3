@@ -13,6 +13,9 @@ class Dataset:
 
     def __getitem__(self, item) -> DataItem:
         return self.__items[item]
+    
+    def __iter__(self):
+        return (t for t in self.__items)
 
     def shuffle(self):
         shuffle(self.__items)
