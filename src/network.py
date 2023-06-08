@@ -44,7 +44,7 @@ class Sigmoid(ActivationFunction):
         super().__init__(ActivationFunctionType.SIGMOID)
 
     def __call__(self, x: np.ndarray) -> np.ndarray:
-        return 1 / (1 - np.e ** -x)
+        return 1 / (1 + np.e ** -x)
 
 
 class StepFunction:
