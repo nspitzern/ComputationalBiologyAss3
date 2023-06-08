@@ -51,8 +51,8 @@ class StepFunction:
     def __init__(self):
         super().__init__()
 
-    def __call__(self, x: np.ndarray, threshold: float = 0.5) -> int:
-        return 1 if x > threshold else 0
+    def __call__(self, x: np.ndarray, threshold: float = 0.5) -> np.ndarray:
+        return np.array(x > threshold, dtype=np.int8)
 
 
 class BatchNorm:
