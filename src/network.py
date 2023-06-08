@@ -47,6 +47,14 @@ class Sigmoid(ActivationFunction):
         return 1 / (1 - np.e ** -x)
 
 
+class StepFunction:
+    def __init__(self):
+        super().__init__()
+
+    def __call__(self, x: np.ndarray, threshold: float = 0.5) -> int:
+        return 1 if x > threshold else 0
+
+
 class BatchNorm:
     def __init__(self):
         pass
@@ -81,6 +89,7 @@ class Network:
             self.__activations.append(activation())
 
         self.__activations.append(Sigmoid())
+        self.__step_func = StepFunction()
 
     @property
     def layers(self):
@@ -95,7 +104,7 @@ class Network:
             x = f(x)
             x = a(x)
 
-        return x
+        return self.__step_func(x)
 
     def __call__(self, x: np.ndarray) -> np.ndarray:
         return self.forward(x)
