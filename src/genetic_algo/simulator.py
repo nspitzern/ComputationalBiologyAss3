@@ -62,7 +62,7 @@ class Simulator:
     def __save(self):
         pass
 
-    def __step(self, step: int, samples: List[Sample], fitness_scores: List[float]):
+    def __step(self, samples: List[Sample], fitness_scores: List[float]):
         # Selection
         elite_samples = Selector.select_elite(samples, fitness_scores, self.__elite_percentile)
         
@@ -98,9 +98,8 @@ class Simulator:
         print(f'Mutation rate: {self.__args.mutation.mutation_percentage}')
 
         while self.__should_run(fitness_scores):
-            print("activating")
-            step_func = lambda s, f: self.__step(step, s, f)
-            samples, fitness_scores = self.__strategy.activate(step_func, samples, fitness_scores)
+            print(f'step {step}')
+            samples, fitness_scores = self.__strategy.activate(self.__step, samples, fitness_scores)
             print("Max fitness:", max(fitness_scores))
             step += 1
 
