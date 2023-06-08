@@ -1,5 +1,5 @@
 from enum import StrEnum
-from typing import List
+from typing import List, Union
 from abc import ABC
 import json
 import numpy as np
@@ -88,7 +88,7 @@ class Network:
         for activation in activations:
             self.__activations.append(activation())
 
-        self.__activations.append(Sigmoid())
+        self.__sigmoid = Sigmoid()
         self.__step_func = StepFunction()
 
     @property
@@ -99,14 +99,14 @@ class Network:
     def activations(self):
         return self.__activations
 
-    def forward(self, x: np.ndarray) -> np.ndarray:
+    def forward(self, x: np.ndarray) -> Union[np.ndarray, int]:
         for f, a in zip(self.__layers, self.__activations):
             x = f(x)
             x = a(x)
 
-        return self.__step_func(x)
+        return self.__step_func(self.__sigmoid(x))
 
-    def __call__(self, x: np.ndarray) -> np.ndarray:
+    def __call__(self, x: np.ndarray) -> Union[np.ndarray, int]:
         return self.forward(x)
     
     def __getitem__(self, item):

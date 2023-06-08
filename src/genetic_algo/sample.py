@@ -1,4 +1,6 @@
 from random import random
+from typing import Union
+
 import numpy as np
 
 from src.network import Network
@@ -24,5 +26,5 @@ class Sample:
     def __len__(self):
         return len(self.__network)
     
-    def __call__(self, x: np.ndarray) -> np.ndarray:
+    def __call__(self, x: np.ndarray) -> Union[np.ndarray, int]:
         return self.__network(x)
