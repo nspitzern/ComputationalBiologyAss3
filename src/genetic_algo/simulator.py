@@ -9,16 +9,18 @@ from src.network import Network, ReLU
 
 
 class MutationArgs:
-    def __init__(self, mutation_percentage: float, mutation_threshold: float) -> None:
+    def __init__(self, mutation_percentage: float, mutation_threshold: float, mutation_magnitude:float) -> None:
         self.mutation_percentage = mutation_percentage
         self.mutation_threshold = mutation_threshold
+        self.mutation_magnitude = mutation_magnitude
 
 
 class SimulationArgs:
-    def __init__(self, fitness_goal: float, elite_percentile: float, mutation_percentage: float, mutation_threshold: float) -> None:
+    def __init__(self, fitness_goal: float, elite_percentile: float, mutation_percentage: float, 
+                 mutation_threshold: float, mutation_magnitude: float) -> None:
         self.fitness_goal = fitness_goal
         self.elite_percentile = elite_percentile
-        self.mutation = MutationArgs(mutation_percentage, mutation_threshold)
+        self.mutation = MutationArgs(mutation_percentage, mutation_threshold, mutation_magnitude)
 
 
 class Simulator:
@@ -30,8 +32,8 @@ class Simulator:
         self.__num_samples = num_samples
         self.__elite_percentile = simulation_args.elite_percentile
 
-    def __should_run(self):
-        return True
+    def __should_run(self, fitness_scores: List[float]):
+        return all([f < 0.97 for f in fitness_scores])
 
     def __generate_crossovers(self, samples: List[Sample], fitness_scores: List[float], n: int) -> List[Sample]:
         """
@@ -78,25 +80,28 @@ class Simulator:
         # Compute fitness
         fitness_scores = self.__strategy.fitness(samples)
 
-        print(f'Current Mutation rate: {self.__args.mutation.mutation_percentage}')
-
         return samples, fitness_scores
 
     def run(self):
         step = 0
 
         layer_dims, activations = [16, 32, 16, 1], [ReLU, ReLU, ReLU]
-        mutation_magnitude = 0.01
+        mutation_magnitude = self.__args.mutation.mutation_magnitude
  
         # Generate initial population
         samples: List[Sample] = [Sample(Network(layer_dims, activations), mutation_magnitude) for _ in range(self.__num_samples)]
         
         # Compute fitness
         fitness_scores = self.__strategy.fitness(samples)
+        print("Max fitness:", max(fitness_scores))
+        
+        print(f'Mutation rate: {self.__args.mutation.mutation_percentage}')
 
-        while self.__should_run():
+        while self.__should_run(fitness_scores):
+            print("activating")
             step_func = lambda s, f: self.__step(step, s, f)
             samples, fitness_scores = self.__strategy.activate(step_func, samples, fitness_scores)
+            print("Max fitness:", max(fitness_scores))
             step += 1
 
         return fitness_scores, samples
