@@ -4,9 +4,19 @@ from abc import ABC
 import json
 import numpy as np
 
+
 class ActivationFunctionType(StrEnum):
     RELU = 'relu'
     SIGMOID = 'sigmoid'
+
+    @staticmethod
+    def get_activation(a_type: str):
+        activations = {
+            'relu': ReLU,
+            'sigmoid': Sigmoid
+        }
+
+        return activations[a_type]
 
 
 class ActivationFunction(ABC):
@@ -76,6 +86,10 @@ class Network:
     def layers(self):
         return self.__layers
 
+    @property
+    def activations(self):
+        return self.__activations
+
     def forward(self, x: np.ndarray) -> np.ndarray:
         for f, a in zip(self.__layers, self.__activations):
             x = f(x)
@@ -95,12 +109,33 @@ class Network:
     def __len__(self):
         return len(self.__layers)
 
-    def save_network(self, filepath: str):
-        with open(filepath, 'w', encoding='utf-8') as f:
-            json.dump({
-                'weight': [l.to_JSON() for l in self.__layers],
-                'activation': [str(a) for a in self.__activations]
-            }, f)
 
-    def load_network(self, filepath: str):
-        pass
+def save_network(filepath: str, network: Network):
+    with open(filepath, 'w', encoding='utf-8') as f:
+        json.dump({
+            'weights': [l.to_JSON() for l in network.layers],
+            'activations': [str(a) for a in network.activations]
+        }, f)
+
+
+def load_network(filepath: str):
+    with open(filepath, 'r', encoding='utf-8') as f:
+        net_structure = json.load(f)
+
+        activations = [ActivationFunctionType.get_activation(a_type) for a_type in net_structure['activations']]
+        weights = [weight for weight in net_structure['weights']]
+
+        dims_list = []
+        for l_weight in weights:
+            weight = np.array(l_weight)
+            dims_list.append(weight.shape[0])
+
+        dims_list.append(weight.shape[-1])
+
+        net = Network(layers_dim=dims_list, activations=activations)
+
+        for i, l_weight in enumerate(weights):
+            weight = np.array(l_weight)
+            net.layers[i].weights = weight
+
+        return net
