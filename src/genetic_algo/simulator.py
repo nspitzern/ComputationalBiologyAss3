@@ -33,7 +33,7 @@ class Simulator:
         self.__elite_percentile = simulation_args.elite_percentile
 
     def __should_run(self, fitness_scores: List[float]):
-        return all([f < 0.97 for f in fitness_scores])
+        return all([f < self.__fitness_goal for f in fitness_scores])
 
     def __generate_crossovers(self, samples: List[Sample], fitness_scores: List[float], n: int) -> List[Sample]:
         """
