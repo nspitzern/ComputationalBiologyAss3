@@ -11,7 +11,7 @@ class Evolver:
     def single_crossover(samples: List[Sample], fitness_scores: List[float]) -> List[Sample]:
         # Choose 2 samples for crossover
         s1, s2 = Selector.choose_n_weighted_random(samples, fitness_scores, 2)
-        i = randint(0, len(s1) - 1)
+        i = randint(0, s1.network_length - 1)
         
         cross1, cross2 = copy.deepcopy(s1), copy.deepcopy(s1)
 
@@ -25,7 +25,7 @@ class Evolver:
     def one_point_crossover(samples: List[Sample], fitness_scores: List[float]) -> List[Sample]:
         # Choose 2 samples for crossover
         s1, s2 = Selector.choose_n_weighted_random(samples, fitness_scores, 2)
-        i = randint(1, len(s1) - 2)
+        i = randint(1, s1.network_length - 2)
 
         cross1, cross2 = copy.deepcopy(s1), copy.deepcopy(s1)
         
