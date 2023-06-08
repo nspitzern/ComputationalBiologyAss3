@@ -65,7 +65,8 @@ class BatchNorm:
 
 class Layer:
     def __init__(self, input_dim, output_dim):
-        self.weights: np.ndarray = np.random.random(size=(input_dim, output_dim))
+        self.weights: np.ndarray = self.__xavier_init(input_dim, output_dim)
+        # self.weights: np.ndarray = np.random.random(size=(input_dim, output_dim))
         self.shape = self.weights.shape
 
     def __call__(self, x: np.ndarray) -> np.ndarray:
@@ -73,6 +74,9 @@ class Layer:
 
     def to_JSON(self):
         return self.weights.tolist()
+
+    def __xavier_init(self, in_dim: int, out_dim: int) -> np.ndarray:
+        return np.random.uniform(low=-1, high=1, size=(in_dim, out_dim)) * np.sqrt(6. / (in_dim + out_dim))
 
 
 class Network:
