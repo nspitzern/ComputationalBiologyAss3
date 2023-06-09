@@ -3,7 +3,7 @@ from typing import Union
 
 import numpy as np
 
-from src.network import Network
+from src.network import Network, save_network
 
 
 class Sample:
@@ -16,6 +16,9 @@ class Sample:
             if random() > threshold:
                 x = np.random.uniform(low=-self.__magnitude, high=self.__magnitude, size=l.shape)
                 l.weights += x
+    
+    def save(self, filepath):
+        save_network(filepath, self.__network)
     
     @property
     def network_length(self):
