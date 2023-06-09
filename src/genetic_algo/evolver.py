@@ -17,7 +17,7 @@ class Evolver:
 
         # Swap one layer
         layer_1, layer_2 = s1[i], s2[i]
-        cross1[i], cross2[i] = layer_2, layer_1
+        cross1[i], cross2[i] = copy.deepcopy(layer_2), copy.deepcopy(layer_1)
 
         return [cross1, cross2]
     
@@ -32,7 +32,7 @@ class Evolver:
         # Swap one part of the sample (multiple layers)
         layer_1_1, layer_2_1 = s1[:i], s2[:i]
         layer_1_2, layer_2_2 = s1[i:], s2[i:]
-        cross1[:i], cross2[:i] = layer_2_1, layer_1_1
-        cross1[i:], cross2[i:] = layer_2_2, layer_1_2
+        cross1[:i], cross2[:i] = copy.deepcopy(layer_2_1), copy.deepcopy(layer_1_1)
+        cross1[i:], cross2[i:] = copy.deepcopy(layer_1_2), copy.deepcopy(layer_2_2)
 
         return [cross1, cross2]
