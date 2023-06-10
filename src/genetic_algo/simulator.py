@@ -99,23 +99,22 @@ class Simulator:
 
         return new_samples
 
-    def __save(self, samples: List[Sample], fitness_scores: List[float]):
-        name: str = f'{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
-
+    def __save(self, samples: List[Sample], fitness_scores: List[float], filename: str):
         # Create output directory if it doesn't exist
         if not os.path.exists(OUTPUT_DIR_PATH):
             os.mkdir(OUTPUT_DIR_PATH)
 
         # Save plot
-        plt.savefig(os.path.join(OUTPUT_DIR_PATH, f'plot_{name}.png'), format='png')
+        plt.savefig(os.path.join(OUTPUT_DIR_PATH, f'plot_{filename}.png'), format='png')
 
         # Save weights of best sample
         i = np.argmax(fitness_scores)
         best: Sample = samples[i]
-        best.save(os.path.join(OUTPUT_DIR_PATH, f'net_{name}.json'))
+        best.save(os.path.join(OUTPUT_DIR_PATH, f'net_{filename}.json'))
 
     def __plot_current(self, history: SimulationHistory):
-        plt.title(f'Method: {GeneticAlgorithmType.map_to_str(self.algo_type)}, Population Size: {self.__num_samples},\n Fitness Calls: {self.__strategy.fitness_calls}, Mutation Ratio: {self.__args.mutation.mutation_percentage * 100}%')
+        best_overall = max(history.best)
+        plt.title(f'Best fitness: {best_overall}\nMethod: {GeneticAlgorithmType.map_to_str(self.algo_type)}, Population Size: {self.__num_samples},\n Fitness Calls: {self.__strategy.fitness_calls}, Mutation Ratio: {self.__args.mutation.mutation_percentage * 100}%')
         plt.plot(history.worst, label='Worst Fitness')
         plt.plot(history.average, label='Avg Fitness')
         plt.plot(history.best, label='Best Fitness')
@@ -157,6 +156,8 @@ class Simulator:
     def run(self):
         history: SimulationHistory = SimulationHistory()
         step = 0
+        best_score = 0
+        filename: str = f'{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
 
         plt.figure(figsize=(8, 6), dpi=70)
         plt.title(f'Initial mutation percentage: {self.__args.mutation.mutation_percentage * 100}%, elite percentile: {self.__elite_percentile * 100}%')
@@ -184,10 +185,15 @@ class Simulator:
 
             self.__add_current_iteration_data(fitness_scores, history)
             self.__plot_current(history)
+
+            # Save best results until now
+            if best_score < max(fitness_scores):
+                self.__save(samples, fitness_scores, filename)
+            
             plt.cla()
 
             step += 1
 
         self.__plot_current(history)
-        self.__save(samples, fitness_scores)
+        self.__save(samples, fitness_scores, filename)
         return fitness_scores, samples
