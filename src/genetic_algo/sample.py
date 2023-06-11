@@ -11,11 +11,17 @@ class Sample:
         self.__network: Network = network
         self.__magnitude = mutation_magnitude
 
-    def mutate(self, threshold: float):
+    def mutate_additive(self, threshold: float):
         for l in self.__network.layers:
             if random() > threshold:
-                x = np.random.uniform(low=-self.__magnitude, high=self.__magnitude, size=l.shape)
-                l.weights += x
+                x = 1 + np.random.uniform(low=-self.__magnitude, high=self.__magnitude, size=l.shape)
+                l.weights *= x
+    
+    def mutate_multiplicative(self, threshold: float):
+        for l in self.__network.layers:
+            if random() > threshold:
+                x = 1 + np.random.uniform(low=-self.__magnitude, high=self.__magnitude, size=l.shape)
+                l.weights *= x
     
     def save(self, filepath):
         save_network(filepath, self.__network)
