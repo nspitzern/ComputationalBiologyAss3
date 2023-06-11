@@ -5,7 +5,7 @@ import numpy as np
 from datetime import datetime
 from typing import List
 
-from src.dataset import Dataset
+from src.dataset import Dataset, split_train_test
 from src.genetic_algo.evolver import Evolver
 from src.genetic_algo.sample import Sample
 from src.genetic_algo.selector import Selector
@@ -63,14 +63,16 @@ class SimulationHistory:
 
 
 class Simulator:
-    def __init__(self, algo_type: GeneticAlgorithmType, num_samples: int, dataset: Dataset, simulation_args: SimulationArgs, plot: bool = False) -> None:
+    def __init__(self, algo_type: GeneticAlgorithmType, num_samples: int, dataset: Dataset, simulation_args: SimulationArgs, train_ratio: int = 0.7, plot: bool = False) -> None:
         self.__args: SimulationArgs = simulation_args
         self.__fitness_goal: float = simulation_args.fitness_goal
         self.algo_type = algo_type
-        self.__strategy = GeneticAlgorithmType.get_strategy(algo_type, dataset, self.__args.mutation.mutation_threshold)
+        self.__strategy = GeneticAlgorithmType.get_strategy(algo_type, self.__args.mutation.mutation_threshold)
         self.__num_samples = num_samples
         self.__elite_percentile = simulation_args.elite_percentile
         self.__plot = plot
+
+        self.__train_dataset, self.__test_dataset = split_train_test(dataset, train_ratio=train_ratio)
 
     def __should_run(self, fitness_scores: List[float]):
         return all([f < self.__fitness_goal for f in fitness_scores])
@@ -133,7 +135,7 @@ class Simulator:
         best: float = max(fitness_scores) * 100
         history.add(worst, average, best)
 
-    def __step(self, samples: List[Sample], fitness_scores: List[float]):
+    def __step(self, samples: List[Sample], fitness_scores: List[float], dataset: Dataset):
         # Selection
         elite_samples = Selector.select_elite(samples, fitness_scores, self.__elite_percentile)
         
@@ -149,7 +151,7 @@ class Simulator:
         samples.extend(elite_samples)
 
         # Compute fitness
-        fitness_scores = self.__strategy.fitness(samples)
+        fitness_scores = self.__strategy.fitness(samples, dataset=dataset)
 
         return samples, fitness_scores
 
@@ -169,31 +171,32 @@ class Simulator:
         samples: List[Sample] = [Sample(Network(layer_dims, activations), mutation_magnitude) for _ in range(self.__num_samples)]
         
         # Compute fitness
-        fitness_scores = self.__strategy.fitness(samples)
-        print("Max fitness:", max(fitness_scores))
+        test_fitness_scores = self.__strategy.fitness(samples, self.__test_dataset)
+        print("Max fitness:", max(test_fitness_scores))
         
         print(f'Mutation rate: {self.__args.mutation.mutation_percentage}')
 
-        self.__add_current_iteration_data(fitness_scores, history)
+        self.__add_current_iteration_data(test_fitness_scores, history)
         self.__plot_current(history)
         plt.cla()
 
-        while self.__should_run(fitness_scores):
+        while self.__should_run(test_fitness_scores):
             print(f'step {step}')
-            samples, fitness_scores = self.__strategy.activate(self.__step, samples, fitness_scores)
-            print("Max fitness:", max(fitness_scores))
+            train_fitness_scores = self.__strategy.fitness(samples, self.__train_dataset)
+            samples, test_fitness_scores = self.__strategy.activate(self.__step, samples, train_fitness_scores, self.__test_dataset)
+            print("Max fitness:", max(test_fitness_scores))
 
-            self.__add_current_iteration_data(fitness_scores, history)
+            self.__add_current_iteration_data(test_fitness_scores, history)
             self.__plot_current(history)
 
             # Save best results until now
-            if best_score < max(fitness_scores):
-                self.__save(samples, fitness_scores, filename)
+            if best_score < max(test_fitness_scores):
+                self.__save(samples, test_fitness_scores, filename)
             
             plt.cla()
 
             step += 1
 
         self.__plot_current(history)
-        self.__save(samples, fitness_scores, filename)
-        return fitness_scores, samples
+        self.__save(samples, test_fitness_scores, filename)
+        return test_fitness_scores, samples
