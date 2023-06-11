@@ -172,6 +172,8 @@ class Simulator:
         
         # Compute fitness
         train_fitness_scores = self.__strategy.fitness(samples, self.__train_dataset)
+        test_fitness_scores = self.__strategy.fitness(samples, self.__test_dataset)
+        print("Max fitness:", max(test_fitness_scores))
         
         print(f'Mutation rate: {self.__args.mutation.mutation_percentage}')
 
