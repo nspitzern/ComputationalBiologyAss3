@@ -10,7 +10,7 @@ from src.genetic_algo.evolver import Evolver
 from src.genetic_algo.sample import Sample
 from src.genetic_algo.selector import Selector
 from src.genetic_algo.strategy import GeneticAlgorithmType
-from src.network import Network, ReLU
+from src.network import Network, ReLU, load_network
 
 
 OUTPUT_DIR_PATH = 'output'
@@ -154,8 +154,8 @@ class Simulator:
         fitness_scores = self.__strategy.fitness(samples, self.__train_dataset)
 
         return samples, fitness_scores
-
-    def run(self):
+    
+    def __run_logic(self, samples: List[Sample]):
         history: SimulationHistory = SimulationHistory()
         step = 0
         best_score = 0
@@ -201,3 +201,18 @@ class Simulator:
         self.__plot_current(history)
         self.__save(samples, test_fitness_scores, filename)
         return test_fitness_scores, samples
+
+    def run(self):
+        layer_dims, activations = [self.__sample_size, 32, 1], [ReLU, ReLU]
+        mutation_magnitude = self.__args.mutation.mutation_magnitude
+
+        # Generate initial population
+        samples: List[Sample] = [Sample(Network(layer_dims, activations), mutation_magnitude) for _ in range(self.__num_samples)]
+
+        return self.__run_logic(samples)
+    
+    def resume(self, filename: str):
+        # Load population from a saved network
+        samples: List[Sample] = [Sample(load_network(filename)) for _ in range(self.__num_samples)]
+
+        return self.__run_logic(samples)

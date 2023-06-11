@@ -22,7 +22,7 @@ class Sample:
                 x = 1 + np.random.uniform(low=-self.__magnitude, high=self.__magnitude, size=l.shape)
                 l.weights *= x
     
-    def save(self, filepath):
+    def save(self, filepath: str):
         save_network(filepath, self.__network)
     
     @property
