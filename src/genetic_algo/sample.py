@@ -14,8 +14,7 @@ class Sample:
     def mutate_additive(self, threshold: float):
         for l in self.__network.layers:
             if random() > threshold:
-                x = 1 + np.random.uniform(low=-self.__magnitude, high=self.__magnitude, size=l.shape)
-                l.weights *= x
+                l.weights += np.random.uniform(low=-self.__magnitude, high=self.__magnitude, size=l.shape)
     
     def mutate_multiplicative(self, threshold: float):
         for l in self.__network.layers:
