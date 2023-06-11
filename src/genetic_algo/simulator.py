@@ -66,13 +66,13 @@ class Simulator:
     def __init__(self, algo_type: GeneticAlgorithmType, num_samples: int, dataset: Dataset, simulation_args: SimulationArgs, train_ratio: int = 0.7, plot: bool = False) -> None:
         self.__args: SimulationArgs = simulation_args
         self.__fitness_goal: float = simulation_args.fitness_goal
+        self.__train_dataset, self.__test_dataset = split_train_test(dataset, train_ratio=train_ratio)
         self.algo_type = algo_type
         self.__strategy = GeneticAlgorithmType.get_strategy(algo_type, self.__args.mutation.mutation_threshold)
         self.__num_samples = num_samples
         self.__elite_percentile = simulation_args.elite_percentile
         self.__plot = plot
-
-        self.__train_dataset, self.__test_dataset = split_train_test(dataset, train_ratio=train_ratio)
+        self.__sample_size = len(dataset[0].sample)
 
     def __should_run(self, fitness_scores: List[float]):
         return all([f < self.__fitness_goal for f in fitness_scores])
@@ -135,7 +135,7 @@ class Simulator:
         best: float = max(fitness_scores) * 100
         history.add(worst, average, best)
 
-    def __step(self, samples: List[Sample], fitness_scores: List[float], dataset: Dataset):
+    def __step(self, samples: List[Sample], fitness_scores: List[float]):
         # Selection
         elite_samples = Selector.select_elite(samples, fitness_scores, self.__elite_percentile)
         
@@ -151,7 +151,7 @@ class Simulator:
         samples.extend(elite_samples)
 
         # Compute fitness
-        fitness_scores = self.__strategy.fitness(samples, dataset=dataset)
+        fitness_scores = self.__strategy.fitness(samples, self.__train_dataset)
 
         return samples, fitness_scores
 
@@ -164,13 +164,14 @@ class Simulator:
         plt.figure(figsize=(8, 6), dpi=70)
         plt.title(f'Initial mutation percentage: {self.__args.mutation.mutation_percentage * 100}%, elite percentile: {self.__elite_percentile * 100}%')
 
-        layer_dims, activations = [16, 32, 16, 1], [ReLU, ReLU, ReLU]
+        layer_dims, activations = [self.__sample_size, 32, 1], [ReLU, ReLU]
         mutation_magnitude = self.__args.mutation.mutation_magnitude
  
         # Generate initial population
         samples: List[Sample] = [Sample(Network(layer_dims, activations), mutation_magnitude) for _ in range(self.__num_samples)]
         
         # Compute fitness
+        train_fitness_scores = self.__strategy.fitness(samples, self.__train_dataset)
         test_fitness_scores = self.__strategy.fitness(samples, self.__test_dataset)
         print("Max fitness:", max(test_fitness_scores))
         
@@ -182,8 +183,8 @@ class Simulator:
 
         while self.__should_run(test_fitness_scores):
             print(f'step {step}')
-            train_fitness_scores = self.__strategy.fitness(samples, self.__train_dataset)
-            samples, test_fitness_scores = self.__strategy.activate(self.__step, samples, train_fitness_scores, self.__test_dataset)
+            samples, train_fitness_scores = self.__strategy.activate(self.__step, samples, train_fitness_scores)
+            test_fitness_scores = self.__strategy.fitness(samples, self.__test_dataset)
             print("Max fitness:", max(test_fitness_scores))
 
             self.__add_current_iteration_data(test_fitness_scores, history)
