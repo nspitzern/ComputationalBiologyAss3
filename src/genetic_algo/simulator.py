@@ -72,7 +72,6 @@ class Simulator:
         self.__num_samples = num_samples
         self.__elite_percentile = simulation_args.elite_percentile
         self.__plot = plot
-        self.__sample_size = len(dataset[0].sample)
 
     def __should_run(self, fitness_scores: List[float]):
         return all([f < self.__fitness_goal for f in fitness_scores])
