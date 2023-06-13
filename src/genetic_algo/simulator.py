@@ -10,7 +10,7 @@ from src.genetic_algo.evolver import Evolver
 from src.genetic_algo.sample import Sample
 from src.genetic_algo.selector import Selector
 from src.genetic_algo.strategy import GeneticAlgorithmType
-from src.network import Network, ReLU, load_network
+from src.network import ActivationFunction, Network, load_network
 
 
 OUTPUT_DIR_PATH = 'output'
@@ -163,13 +163,7 @@ class Simulator:
 
         plt.figure(figsize=(8, 6), dpi=70)
         plt.title(f'Initial mutation percentage: {self.__args.mutation.mutation_percentage * 100}%, elite percentile: {self.__elite_percentile * 100}%')
-
-        layer_dims, activations = [self.__sample_size, 32, 1], [ReLU, ReLU]
-        mutation_magnitude = self.__args.mutation.mutation_magnitude
  
-        # Generate initial population
-        samples: List[Sample] = [Sample(Network(layer_dims, activations), mutation_magnitude) for _ in range(self.__num_samples)]
-        
         # Compute fitness
         train_fitness_scores = self.__strategy.fitness(samples, self.__train_dataset)
         test_fitness_scores = self.__strategy.fitness(samples, self.__test_dataset)
@@ -202,17 +196,14 @@ class Simulator:
         self.__save(samples, test_fitness_scores, filename)
         return test_fitness_scores, samples
 
-    def run(self):
-        layer_dims, activations = [self.__sample_size, 32, 1], [ReLU, ReLU]
+    def run(self, layer_dims: List[int], activations: List[ActivationFunction]):
         mutation_magnitude = self.__args.mutation.mutation_magnitude
 
         # Generate initial population
         samples: List[Sample] = [Sample(Network(layer_dims, activations), mutation_magnitude) for _ in range(self.__num_samples)]
-
         return self.__run_logic(samples)
     
     def resume(self, filename: str):
         # Load population from a saved network
         samples: List[Sample] = [Sample(load_network(filename)) for _ in range(self.__num_samples)]
-
         return self.__run_logic(samples)
