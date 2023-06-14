@@ -13,9 +13,6 @@ from src.genetic_algo.strategy import GeneticAlgorithmType
 from src.network import ActivationFunction, Network, load_network
 
 
-OUTPUT_DIR_PATH = 'output'
-
-
 class MutationArgs:
     def __init__(self, mutation_percentage: float, mutation_threshold: float, mutation_magnitude:float) -> None:
         self.mutation_percentage = mutation_percentage
@@ -63,13 +60,15 @@ class SimulationHistory:
 
 
 class Simulator:
-    def __init__(self, algo_type: GeneticAlgorithmType, num_samples: int, dataset: Dataset, simulation_args: SimulationArgs, train_ratio: int = 0.7, plot: bool = False) -> None:
+    def __init__(self, algo_type: GeneticAlgorithmType, num_samples: int, dataset: Dataset, 
+                 output_dir_path: str, simulation_args: SimulationArgs, train_ratio: int = 0.7, plot: bool = False) -> None:
         self.__args: SimulationArgs = simulation_args
         self.__fitness_goal: float = simulation_args.fitness_goal
         self.__train_dataset, self.__test_dataset = split_train_test(dataset, train_ratio=train_ratio)
         self.algo_type = algo_type
         self.__strategy = GeneticAlgorithmType.get_strategy(algo_type, self.__args.mutation.mutation_threshold)
         self.__num_samples = num_samples
+        self.__output_dir_path = output_dir_path
         self.__elite_percentile = simulation_args.elite_percentile
         self.__plot = plot
 
@@ -102,16 +101,28 @@ class Simulator:
 
     def __save(self, samples: List[Sample], fitness_scores: List[float], filename: str):
         # Create output directory if it doesn't exist
-        if not os.path.exists(OUTPUT_DIR_PATH):
-            os.mkdir(OUTPUT_DIR_PATH)
+        if not os.path.exists(self.__output_dir_path):
+            os.mkdir(self.__output_dir_path)
 
         # Save plot
-        plt.savefig(os.path.join(OUTPUT_DIR_PATH, f'plot_{filename}.png'), format='png')
+        plt.savefig(os.path.join(self.__output_dir_path, f'plot_{filename}.png'), format='png')
 
         # Save weights of best sample
         i = np.argmax(fitness_scores)
         best: Sample = samples[i]
-        best.save(os.path.join(OUTPUT_DIR_PATH, f'net_{filename}.json'))
+        best.save(os.path.join(self.__output_dir_path, f'net_{filename}.json'))
+
+        # Save simulator arguments
+        filename = os.path.join(self.__output_dir_path, f'data_{filename}.txt')
+        with open(filename, '+wt', encoding='utf-8') as f:
+            f.write(f'strategy: {GeneticAlgorithmType.map_to_str(self.algo_type)}{os.linesep}')
+            f.write(f'sample size: {self.__num_samples}{os.linesep}')
+            f.write(f'fitness score: {fitness_scores[i] * 100:.3f}{os.linesep}')
+            f.write(f'fitness calls: {self.__strategy.fitness_calls}{os.linesep}')
+            f.write(f'elite percentage: {self.__elite_percentile}{os.linesep}')
+            f.write(f'mutation percentage: {self.__args.mutation.mutation_percentage}{os.linesep}')
+            f.write(f'minimum mutation threshold: {self.__args.mutation.mutation_threshold}{os.linesep}')
+            f.write(f'minimum mutation magnitude: {self.__args.mutation.mutation_magnitude}{os.linesep}')
 
     def __plot_current(self, history: SimulationHistory):
         best_overall = max(history.best)
