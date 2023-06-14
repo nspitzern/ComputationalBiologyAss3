@@ -8,12 +8,16 @@ import numpy as np
 class ActivationFunctionType(StrEnum):
     RELU = 'relu'
     SIGMOID = 'sigmoid'
+    TANH = 'tanh'
+    SWISH = 'swish'
 
     @staticmethod
     def get_activation(a_type: str):
         activations = {
             'relu': ReLU,
-            'sigmoid': Sigmoid
+            'sigmoid': Sigmoid,
+            'tanh': Tanh,
+            'swish': Swish
         }
 
         return activations[a_type]
@@ -47,6 +51,25 @@ class Sigmoid(ActivationFunction):
         return 1 / (1 + np.e ** -x)
 
 
+class Tanh(ActivationFunction):
+    def __init__(self):
+        super().__init__(ActivationFunctionType.TANH)
+
+    def __call__(self, x: np.ndarray) -> np.ndarray:
+        e_x = np.e ** x
+        e_minus_x = np.e ** -x
+        return (e_x - e_minus_x) / (e_x + e_minus_x)
+
+
+class Swish(ActivationFunction):
+    def __init__(self):
+        super(Swish, self).__init__(ActivationFunctionType.SWISH)
+        self.sigmoid = Sigmoid()
+
+    def __call__(self, x: np.ndarray) -> np.ndarray:
+        return x * self.sigmoid(x)
+
+
 class StepFunction:
     def __init__(self):
         super().__init__()
@@ -55,12 +78,58 @@ class StepFunction:
         return np.array(x > threshold, dtype=np.int8)
 
 
-class BatchNorm:
-    def __init__(self):
-        pass
+class BatchNormLayer:
+    def __init__(self, dims: int) -> None:
+        self.gamma = np.ones((1, dims), dtype="float32")
+        self.bias = np.zeros((1, dims), dtype="float32")
 
-    def __call__(self, x: np.ndarray):
-        raise NotImplemented
+        self.running_mean_x = np.zeros(0)
+        self.running_var_x = np.zeros(0)
+
+        # forward params
+        self.var_x = np.zeros(0)
+        self.stddev_x = np.zeros(0)
+        self.x_minus_mean = np.zeros(0)
+        self.standard_x = np.zeros(0)
+        self.num_examples = 0
+        self.mean_x = np.zeros(0)
+        self.running_avg_gamma = 0.9
+
+        # backward params
+        self.gamma_grad = np.zeros(0)
+        self.bias_grad = np.zeros(0)
+
+    def update_running_variables(self) -> None:
+        is_mean_empty = np.array_equal(np.zeros(0), self.running_mean_x)
+        is_var_empty = np.array_equal(np.zeros(0), self.running_var_x)
+        if is_mean_empty != is_var_empty:
+            raise ValueError("Mean and Var running averages should be "
+                             "initilizaded at the same time")
+        if is_mean_empty:
+            self.running_mean_x = self.mean_x
+            self.running_var_x = self.var_x
+        else:
+            gamma = self.running_avg_gamma
+            self.running_mean_x = gamma * self.running_mean_x + \
+                                  (1.0 - gamma) * self.mean_x
+            self.running_var_x = gamma * self.running_var_x + \
+                                 (1. - gamma) * self.var_x
+
+    def __call__(self, x: np.ndarray, train: bool = True) -> np.ndarray:
+        self.num_examples = x.shape[0]
+        if train:
+            self.mean_x = np.mean(x, axis=0, keepdims=True)
+            self.var_x = np.mean((x - self.mean_x) ** 2, axis=0, keepdims=True)
+            self.update_running_variables()
+        else:
+            self.mean_x = self.running_mean_x.copy()
+            self.var_x = self.running_var_x.copy()
+
+        self.var_x += 10e-3
+        self.stddev_x = np.sqrt(self.var_x)
+        self.x_minus_mean = x - self.mean_x
+        self.standard_x = self.x_minus_mean / self.stddev_x
+        return self.gamma * self.standard_x + self.bias
 
 
 class Layer:
