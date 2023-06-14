@@ -145,7 +145,7 @@ class Simulator:
         mutation_amount = int(len(samples) * self.__args.mutation.mutation_percentage)
 
         for i in Selector.choose_n_random(samples, mutation_amount):
-            samples[i].mutate_multiplicative(self.__args.mutation.mutation_threshold)
+            samples[i].mutate_neurons(self.__args.mutation.mutation_threshold)
 
         samples.extend(elite_samples)
 

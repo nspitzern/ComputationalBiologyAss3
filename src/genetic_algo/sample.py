@@ -26,7 +26,13 @@ class Sample:
         for l in self.__network.layers:
             if random() > threshold:
                 l.weights = np.random.uniform(low=-self.__magnitude, high=self.__magnitude, size=l.shape)
-    
+
+    def mutate_neurons(self, threshold: float):
+        for l in self.__network.layers:
+            weights_to_change = np.random.random(l.shape) >= threshold
+            scale = np.random.uniform(low=-self.__magnitude, high=self.__magnitude, size=l.shape)
+            l.weights += weights_to_change * scale
+
     def save(self, filepath: str):
         save_network(filepath, self.__network)
     
