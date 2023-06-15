@@ -215,7 +215,9 @@ class Simulator:
         samples: List[Sample] = [Sample(Network(layer_dims, activations), mutation_function, mutation_threshold, mutation_magnitude) for _ in range(self.__num_samples)]
         return self.__run_logic(samples)
     
-    def resume(self, filename: str):
+    def resume(self, filename: str, mutation_function: Callable[[Network, float, float], None]):
         # Load population from a saved network
-        samples: List[Sample] = [Sample(load_network(filename)) for _ in range(self.__num_samples)]
+        mutation_threshold = self.__args.mutation.mutation_threshold
+        mutation_magnitude = self.__args.mutation.mutation_magnitude
+        samples: List[Sample] = [Sample(load_network(filename), mutation_function, mutation_threshold, mutation_magnitude) for _ in range(self.__num_samples)]
         return self.__run_logic(samples)
