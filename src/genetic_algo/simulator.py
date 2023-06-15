@@ -116,6 +116,7 @@ class Simulator:
         filename = os.path.join(self.__output_dir_path, f'data_{filename}.txt')
         with open(filename, '+wt', encoding='utf-8') as f:
             f.write(f'strategy: {GeneticAlgorithmType.map_to_str(self.algo_type)}{os.linesep}')
+            f.write(f'mutation function: {str(best._Sample__mutation_function.__name__)}{os.linesep}')
             f.write(f'sample size: {self.__num_samples}{os.linesep}')
             f.write(f'fitness score: {fitness_scores[i] * 100:.3f}{os.linesep}')
             f.write(f'fitness calls: {self.__strategy.fitness_calls}{os.linesep}')

@@ -12,10 +12,10 @@ class Sample:
         self.__threshold = mutation_threshold
         self.__magnitude = mutation_magnitude
     
-    def mutate(self):
+    def mutate(self) -> None:
         self.__mutation_function(self.__network, self.__threshold, self.__magnitude)
 
-    def save(self, filepath: str):
+    def save(self, filepath: str) -> None:
         save_network(filepath, self.__network)
     
     @property
