@@ -3,7 +3,7 @@ import statistics
 import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime
-from typing import List
+from typing import Callable, List
 
 from src.dataset import Dataset, split_train_test
 from src.genetic_algo.evolver import Evolver
@@ -66,7 +66,7 @@ class Simulator:
         self.__fitness_goal: float = simulation_args.fitness_goal
         self.__train_dataset, self.__test_dataset = split_train_test(dataset, train_ratio=train_ratio)
         self.algo_type = algo_type
-        self.__strategy = GeneticAlgorithmType.get_strategy(algo_type, self.__args.mutation.mutation_threshold)
+        self.__strategy = GeneticAlgorithmType.get_strategy(algo_type)
         self.__num_samples = num_samples
         self.__output_dir_path = output_dir_path
         self.__elite_percentile = simulation_args.elite_percentile
@@ -156,7 +156,7 @@ class Simulator:
         mutation_amount = int(len(samples) * self.__args.mutation.mutation_percentage)
 
         for i in Selector.choose_n_random(samples, mutation_amount):
-            samples[i].mutate_additive(self.__args.mutation.mutation_threshold)
+            samples[i].mutate()
 
         samples.extend(elite_samples)
 
@@ -206,11 +206,12 @@ class Simulator:
         self.__save(samples, test_fitness_scores, filename)
         return test_fitness_scores, samples
 
-    def run(self, layer_dims: List[int], activations: List[ActivationFunction]):
+    def run(self, layer_dims: List[int], activations: List[ActivationFunction], mutation_function: Callable[[Network, float, float], None]):
+        mutation_threshold = self.__args.mutation.mutation_threshold
         mutation_magnitude = self.__args.mutation.mutation_magnitude
 
         # Generate initial population
-        samples: List[Sample] = [Sample(Network(layer_dims, activations), mutation_magnitude) for _ in range(self.__num_samples)]
+        samples: List[Sample] = [Sample(Network(layer_dims, activations), mutation_function, mutation_threshold, mutation_magnitude) for _ in range(self.__num_samples)]
         return self.__run_logic(samples)
     
     def resume(self, filename: str):
