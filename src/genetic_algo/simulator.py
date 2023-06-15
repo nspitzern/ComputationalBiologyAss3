@@ -187,7 +187,7 @@ class Simulator:
 
         while self.__should_run(test_fitness_scores):
             print(f'step {step}')
-            samples, train_fitness_scores = self.__strategy.activate(self.__step, samples, train_fitness_scores)
+            samples, train_fitness_scores = self.__strategy.activate(self.__step, samples, self.__train_dataset, train_fitness_scores)
             test_fitness_scores = self.__strategy.fitness(samples, self.__test_dataset)
             print("Max fitness:", max(test_fitness_scores))
 

@@ -43,7 +43,7 @@ class BaseStrategy:
 
 
 class OptimizationStrategy(BaseStrategy):
-    def optimize(self, samples: List[Sample], fitness_scores: List[float]) -> List[Sample]:
+    def optimize(self, samples: List[Sample], dataset: Dataset, fitness_scores: List[float]) -> List[Sample]:
         optimized: List[Sample] = list()
         prev_fitness = 0
 
@@ -53,7 +53,7 @@ class OptimizationStrategy(BaseStrategy):
             for _ in range(10):
                 temp.mutate()
 
-            new_fitness = self.fitness([temp])[0]
+            new_fitness = self.fitness([temp], dataset)[0]
             # Accept mutation only if it is better
             if new_fitness >= f and new_fitness > prev_fitness:
                 new_sample = temp
@@ -65,21 +65,24 @@ class OptimizationStrategy(BaseStrategy):
 
 
 class RegularStrategy(BaseStrategy):
-    def activate(self, step_func: Callable[[List[Sample], List[float]], Tuple[List[Sample], List[float]]], samples: List[Sample], fitness_scores: List[float]) -> Tuple[List[Sample], List[float]]:
+    def activate(self, step_func: Callable[[List[Sample], List[float]], Tuple[List[Sample], List[float]]], 
+                 samples: List[Sample], dataset: Dataset, fitness_scores: List[float]) -> Tuple[List[Sample], List[float]]:
         return step_func(samples, fitness_scores)
 
 
 class DarwinStrategy(OptimizationStrategy):
-    def activate(self, step_func: Callable[[List[Sample], List[float]], Tuple[List[Sample], List[float]]], samples: List[Sample], fitness_scores: List[float]) -> Tuple[List[Sample], List[float]]:
-        optimized_samples = self.optimize(samples, fitness_scores)
-        optimized_fitness = self.fitness(optimized_samples)
+    def activate(self, step_func: Callable[[List[Sample], List[float]], Tuple[List[Sample], List[float]]], 
+                 samples: List[Sample], dataset: Dataset, fitness_scores: List[float]) -> Tuple[List[Sample], List[float]]:
+        optimized_samples = self.optimize(samples, dataset, fitness_scores)
+        optimized_fitness = self.fitness(optimized_samples, dataset)
         samples, fitness_scores = step_func(samples, optimized_fitness)
         return samples, fitness_scores
 
 
 class LamarckStrategy(OptimizationStrategy):
-    def activate(self, step_func: Callable[[List[Sample], List[float]], Tuple[List[Sample], List[float]]], samples: List[Sample], fitness_scores: List[float]) -> Tuple[List[Sample], List[float]]:
-        optimized_samples = self.optimize(samples, fitness_scores)
-        optimized_fitness = self.fitness(optimized_samples)
+    def activate(self, step_func: Callable[[List[Sample], List[float]], Tuple[List[Sample], List[float]]], 
+                 samples: List[Sample], dataset: Dataset, fitness_scores: List[float]) -> Tuple[List[Sample], List[float]]:
+        optimized_samples = self.optimize(samples, dataset, fitness_scores)
+        optimized_fitness = self.fitness(optimized_samples, dataset)
         samples, fitness_scores = step_func(optimized_samples, optimized_fitness)
         return samples, fitness_scores
