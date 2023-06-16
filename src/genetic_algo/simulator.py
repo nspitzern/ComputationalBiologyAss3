@@ -101,8 +101,7 @@ class Simulator:
 
     def __save(self, samples: List[Sample], fitness_scores: List[float], filename: str):
         # Create output directory if it doesn't exist
-        if not os.path.exists(self.__output_dir_path):
-            os.mkdir(self.__output_dir_path)
+        os.makedirs(self.__output_dir_path, exist_ok=True)
 
         # Save plot
         plt.savefig(os.path.join(self.__output_dir_path, f'plot_{filename}.png'), format='png')
