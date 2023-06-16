@@ -1,10 +1,11 @@
 from typing import Callable, Union
 import numpy as np
 
+from src.common.base_sample import BaseSample
 from src.network import Network, save_network
 
 
-class Sample:
+class Sample(BaseSample):
     def __init__(self, network: Network, mutation_function: Callable[[Network, float, float], None], 
                  mutation_threshold: float, mutation_magnitude: float):
         self.__network: Network = network

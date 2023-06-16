@@ -1,10 +1,10 @@
 import copy
 from enum import IntEnum
 from typing import Callable, List, Tuple
-from src.dataset import Dataset
 
-from src.genetic_algo.fitness import correctness_ratio
-from src.genetic_algo.sample import Sample
+from src.dataset import Dataset
+from src.genetic_algo.train_net.fitness import correctness_ratio
+from src.genetic_algo.train_net.sample import Sample
 
 
 class GeneticAlgorithmType(IntEnum):

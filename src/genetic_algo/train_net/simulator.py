@@ -3,13 +3,14 @@ import statistics
 import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime
-from typing import Callable, List
+from typing import Callable, List, Tuple
 
+from src.common.simulation_history import SimulationHistory
 from src.dataset import Dataset, split_train_test
-from src.genetic_algo.evolver import Evolver
-from src.genetic_algo.sample import Sample
+from src.genetic_algo.train_net.evolver import Evolver
+from src.genetic_algo.train_net.sample import Sample
 from src.genetic_algo.selector import Selector
-from src.genetic_algo.strategy import GeneticAlgorithmType
+from src.genetic_algo.train_net.strategy import GeneticAlgorithmType
 from src.network import ActivationFunction, Network, load_network
 
 
@@ -28,40 +29,9 @@ class SimulationArgs:
         self.mutation = MutationArgs(mutation_percentage, mutation_threshold, mutation_magnitude)
 
 
-class SimulationHistory:
-    def __init__(self) -> None:
-        self.__worst: List[float] = []
-        self.__average: List[float] = []
-        self.__best: List[float] = []
-
-    @property
-    def worst(self) -> List[float]:
-        return self.__worst
-    
-    @property
-    def average(self) -> List[float]:
-        return self.__average
-    
-    @property
-    def best(self) -> List[float]:
-        return self.__best
-    
-    def add(self, worst, average, best) -> None:
-        self.__worst.append(worst)
-        self.__average.append(average)
-        self.__best.append(best)
-    
-    def last_n_best_change(self, n: int) -> float:
-        last_n = self.__best[-n:]
-        return max(last_n) - min(last_n)
-
-    def __len__(self):
-        return len(self.__average)
-
-
 class Simulator:
     def __init__(self, algo_type: GeneticAlgorithmType, num_samples: int, dataset: Dataset, 
-                 output_dir_path: str, simulation_args: SimulationArgs, train_ratio: int = 0.7, plot: bool = False) -> None:
+                 output_dir_path: str, simulation_args: SimulationArgs, train_ratio: int = 0.7, max_steps: int = -1, silent: bool = False, plot: bool = False) -> None:
         self.__args: SimulationArgs = simulation_args
         self.__fitness_goal: float = simulation_args.fitness_goal
         self.__train_dataset, self.__test_dataset = split_train_test(dataset, train_ratio=train_ratio)
@@ -70,9 +40,19 @@ class Simulator:
         self.__num_samples = num_samples
         self.__output_dir_path = output_dir_path
         self.__elite_percentile = simulation_args.elite_percentile
+        self.__max_steps = max_steps
+        self.__silent = silent
         self.__plot = plot
 
-    def __should_run(self, fitness_scores: List[float]):
+    def __log(self, message: str):
+        if self.__silent:
+            return
+        
+        print(message)
+
+    def __should_run(self, step: int, fitness_scores: List[float]):
+        if self.__max_steps != -1 and step >= self.__max_steps:
+            return False
         return all([f < self.__fitness_goal for f in fitness_scores])
 
     def __generate_crossovers(self, samples: List[Sample], fitness_scores: List[float], n: int) -> List[Sample]:
@@ -100,6 +80,9 @@ class Simulator:
         return new_samples
 
     def __save(self, samples: List[Sample], fitness_scores: List[float], filename: str):
+        if not self.__silent:
+            return
+        
         # Create output directory if it doesn't exist
         os.makedirs(self.__output_dir_path, exist_ok=True)
 
@@ -165,7 +148,7 @@ class Simulator:
 
         return samples, fitness_scores
     
-    def __run_logic(self, samples: List[Sample]):
+    def __run_logic(self, samples: List[Sample]) -> Tuple[List[float], List[Sample]]:
         history: SimulationHistory = SimulationHistory()
         step = 0
         best_score = 0
@@ -177,19 +160,19 @@ class Simulator:
         # Compute fitness
         train_fitness_scores = self.__strategy.fitness(samples, self.__train_dataset)
         test_fitness_scores = self.__strategy.fitness(samples, self.__test_dataset)
-        print("Max fitness:", max(test_fitness_scores))
+        self.__log(f'Max fitness: {max(test_fitness_scores)}')
         
-        print(f'Mutation rate: {self.__args.mutation.mutation_percentage}')
+        self.__log(f'Mutation rate: {self.__args.mutation.mutation_percentage}')
 
         self.__add_current_iteration_data(test_fitness_scores, history)
         self.__plot_current(history)
         plt.cla()
 
-        while self.__should_run(test_fitness_scores):
-            print(f'step {step}')
+        while self.__should_run(step, test_fitness_scores):
+            self.__log(f'step {step}')
             samples, train_fitness_scores = self.__strategy.activate(self.__step, samples, self.__train_dataset, train_fitness_scores)
             test_fitness_scores = self.__strategy.fitness(samples, self.__test_dataset)
-            print("Max fitness:", max(test_fitness_scores))
+            self.__log(f'Max fitness: {max(test_fitness_scores)}')
 
             self.__add_current_iteration_data(test_fitness_scores, history)
             self.__plot_current(history)
@@ -209,7 +192,8 @@ class Simulator:
         self.__save(samples, test_fitness_scores, filename)
         return test_fitness_scores, samples
 
-    def run(self, layer_dims: List[int], activations: List[ActivationFunction], mutation_function: Callable[[Network, float, float], None]):
+    def run(self, layer_dims: List[int], activations: List[ActivationFunction], 
+            mutation_function: Callable[[Network, float, float], None]) -> Tuple[List[float], List[Sample]]:
         mutation_threshold = self.__args.mutation.mutation_threshold
         mutation_magnitude = self.__args.mutation.mutation_magnitude
 
@@ -217,9 +201,14 @@ class Simulator:
         samples: List[Sample] = [Sample(Network(layer_dims, activations), mutation_function, mutation_threshold, mutation_magnitude) for _ in range(self.__num_samples)]
         return self.__run_logic(samples)
     
-    def resume(self, filename: str, mutation_function: Callable[[Network, float, float], None]):
+    def resume(self, filename: str, mutation_function: Callable[[Network, float, float], None]) -> Tuple[List[float], List[Sample]]:
         # Load population from a saved network
+        network = load_network(filename)
+        return self.resume_network(network, mutation_function)
+    
+    def resume_network(self, network: Network, mutation_function: Callable[[Network, float, float], None]) -> Tuple[List[float], List[Sample]]:
+        # Load population from a given network
         mutation_threshold = self.__args.mutation.mutation_threshold
         mutation_magnitude = self.__args.mutation.mutation_magnitude
-        samples: List[Sample] = [Sample(load_network(filename), mutation_function, mutation_threshold, mutation_magnitude) for _ in range(self.__num_samples)]
+        samples: List[Sample] = [Sample(network, mutation_function, mutation_threshold, mutation_magnitude) for _ in range(self.__num_samples)]
         return self.__run_logic(samples)

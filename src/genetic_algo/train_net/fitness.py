@@ -1,7 +1,7 @@
 import numpy as np
 
 from src.dataset import Dataset
-from src.genetic_algo.sample import Sample
+from src.genetic_algo.train_net.sample import Sample
 
 def correctness_ratio(sample: Sample, dataset: Dataset) -> float:
     """
