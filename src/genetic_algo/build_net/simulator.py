@@ -46,7 +46,7 @@ class Simulator:
 
         self.__train_simulator = TrainSimulator(self.algo_type, self.__num_samples, self.__dataset, 
                                                 self.__output_dir_path, self.__args, train_ratio=self.__train_ratio, 
-                                                max_steps=max_steps, silent=False, plot=self.__plot)
+                                                max_steps=max_steps, silent=True, plot=self.__plot)
         self.__strategy = GeneticAlgorithmType.get_strategy(algo_type, self.__train_simulator, self.__args.mutation.mutation_function)
 
     def __should_run(self, fitness_scores: List[float]):
