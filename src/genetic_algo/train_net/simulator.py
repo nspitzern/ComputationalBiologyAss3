@@ -80,7 +80,7 @@ class Simulator:
         return new_samples
 
     def __save(self, samples: List[Sample], fitness_scores: List[float], filename: str):
-        if not self.__silent:
+        if self.__silent:
             return
         
         # Create output directory if it doesn't exist
