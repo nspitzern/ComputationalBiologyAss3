@@ -198,6 +198,9 @@ class Simulator:
             # Save best results until now
             if best_score < max(test_fitness_scores):
                 self.__save(samples, test_fitness_scores, filename)
+
+            # Shuffle train dataset so we don't overfit
+            self.__train_dataset.shuffle()
             
             plt.cla()
 
