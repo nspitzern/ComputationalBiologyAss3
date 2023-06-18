@@ -35,7 +35,7 @@ class Evolver:
         if min_len < 4:
             return []
         
-        i = randint(2, min_len - 2)
+        i = randint(1, min_len - 2)
 
         cross1, cross2 = copy.deepcopy(s1), copy.deepcopy(s1)
         
