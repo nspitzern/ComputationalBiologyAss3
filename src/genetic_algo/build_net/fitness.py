@@ -20,5 +20,7 @@ def correctness_ratio(simulator: TrainSimulator, sample: Sample, mutation_functi
     network: Network = sample.network
     fitness_scores, samples = simulator.resume_network(network, mutation_function)
     i = np.argmax(fitness_scores)
-    sample.best_sample = samples[i]
-    return fitness_scores[i]
+    if sample.best_score < fitness_scores[i]:
+        sample.best_sample = samples[i]
+        sample.best_score = fitness_scores[i]
+    return sample.best_score

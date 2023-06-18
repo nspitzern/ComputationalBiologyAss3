@@ -12,6 +12,7 @@ class Sample(BaseSample):
         self.__net_optional_sizes = net_optional_sizes
         self.__threshold = mutation_threshold
         self.best_sample: BaseSample = None
+        self.best_score: int = 0
     
     @property
     def network(self):
