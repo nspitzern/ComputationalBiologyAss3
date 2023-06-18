@@ -215,5 +215,5 @@ class Simulator:
     
     def resume(self, filename: str):
         # Load population from a saved network
-        samples: List[Sample] = [Sample(load_network(filename)) for _ in range(self.__num_samples)]
+        samples: List[Sample] = [Sample(load_network(filename), self.__args.mutation.mutation_magnitude) for _ in range(self.__num_samples)]
         return self.__run_logic(samples)
