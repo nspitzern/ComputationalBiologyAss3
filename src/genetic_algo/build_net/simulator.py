@@ -68,7 +68,7 @@ class Simulator:
         filename = os.path.join(self.__output_dir_path, f'data_{filename}.txt')
         with open(filename, '+wt', encoding='utf-8') as f:
             f.write(f'strategy: {GeneticAlgorithmType.map_to_str(self.algo_type)}{os.linesep}')
-            f.write(f'mutation function: {str(best._Sample__mutation_function.__name__)}{os.linesep}')
+            f.write(f'mutation function: {str(best.best_sample._Sample__mutation_function.__name__)}{os.linesep}')
             f.write(f'sample size: {self.__num_samples}{os.linesep}')
             f.write(f'fitness score: {fitness_scores[i] * 100:.3f}{os.linesep}')
             f.write(f'fitness calls: {self.__strategy.fitness_calls}{os.linesep}')
@@ -114,7 +114,7 @@ class Simulator:
         samples.extend(elite_samples)
 
         # Compute fitness
-        fitness_scores = self.__strategy.fitness(samples, self.__train_dataset)
+        fitness_scores = self.__strategy.fitness(samples)
 
         return samples, fitness_scores
     
@@ -147,6 +147,7 @@ class Simulator:
 
             # Save best results until now
             if best_score < max(fitness_scores):
+                best_score = max(fitness_scores)
                 self.__save(samples, fitness_scores, filename)
             
             plt.cla()

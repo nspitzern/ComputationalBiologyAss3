@@ -5,9 +5,12 @@ from src.genetic_algo.train_net.sample import Sample
 
 def correctness_ratio(sample: Sample, dataset: Dataset) -> float:
     """
-    Check the ratio of decoded words that appear in the corpus
-    :param dec: List of decoded words
-    :param corpus: List of Corpus words
-    :return: float: ratio
+    Check the ratio of correct predictions
+    Args:
+        sample (Sample): the sample to check
+        dataset (Dataset): the dataset to test the sample on
+
+    Returns:
+        float: ratio
     """
     return np.mean([sample(batch) == labels for batch, labels in dataset])
