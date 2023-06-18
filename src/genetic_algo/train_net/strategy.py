@@ -1,10 +1,10 @@
 import copy
 from enum import IntEnum
 from typing import Callable, List, Tuple
-from src.dataset import Dataset
 
-from src.genetic_algo.fitness import correctness_ratio
-from src.genetic_algo.sample import Sample
+from src.dataset import Dataset
+from src.genetic_algo.train_net.fitness import correctness_ratio
+from src.genetic_algo.train_net.sample import Sample
 
 
 class GeneticAlgorithmType(IntEnum):
@@ -13,11 +13,11 @@ class GeneticAlgorithmType(IntEnum):
     LAMARCK = 2
 
     @staticmethod
-    def get_strategy(strategy: int, mutation_threshold: float):
+    def get_strategy(strategy: int):
         if strategy == 1:
-            return DarwinStrategy(mutation_threshold)
+            return DarwinStrategy()
         if strategy == 2:
-            return LamarckStrategy(mutation_threshold)
+            return LamarckStrategy()
         return RegularStrategy()
 
     @staticmethod
@@ -43,12 +43,7 @@ class BaseStrategy:
 
 
 class OptimizationStrategy(BaseStrategy):
-    def __init__(self, mutation_threshold: float) -> None:
-        super().__init__()
-
-        self.__mutation_threshold = mutation_threshold
-    
-    def optimize(self, samples: List[Sample], fitness_scores: List[float]) -> List[Sample]:
+    def optimize(self, samples: List[Sample], dataset: Dataset, fitness_scores: List[float]) -> List[Sample]:
         optimized: List[Sample] = list()
         prev_fitness = 0
 
@@ -56,9 +51,9 @@ class OptimizationStrategy(BaseStrategy):
             new_sample = s
             temp: Sample = copy.deepcopy(s)
             for _ in range(10):
-                temp.mutate(self.__mutation_threshold)
+                temp.mutate()
 
-            new_fitness = self.fitness([temp])[0]
+            new_fitness = self.fitness([temp], dataset)[0]
             # Accept mutation only if it is better
             if new_fitness >= f and new_fitness > prev_fitness:
                 new_sample = temp
@@ -70,30 +65,24 @@ class OptimizationStrategy(BaseStrategy):
 
 
 class RegularStrategy(BaseStrategy):
-    def __init__(self) -> None:
-        super().__init__()
-
-    def activate(self, step_func: Callable[[List[Sample], List[float]], Tuple[List[Sample], List[float]]], samples: List[Sample], fitness_scores: List[float]) -> Tuple[List[Sample], List[float]]:
+    def activate(self, step_func: Callable[[List[Sample], List[float]], Tuple[List[Sample], List[float]]], 
+                 samples: List[Sample], dataset: Dataset, fitness_scores: List[float]) -> Tuple[List[Sample], List[float]]:
         return step_func(samples, fitness_scores)
 
 
 class DarwinStrategy(OptimizationStrategy):
-    def __init__(self, mutation_threshold: float) -> None:
-        super().__init__(mutation_threshold)
-
-    def activate(self, step_func: Callable[[List[Sample], List[float]], Tuple[List[Sample], List[float]]], samples: List[Sample], fitness_scores: List[float]) -> Tuple[List[Sample], List[float]]:
-        optimized_samples = self.optimize(samples, fitness_scores)
-        optimized_fitness = self.fitness(optimized_samples)
+    def activate(self, step_func: Callable[[List[Sample], List[float]], Tuple[List[Sample], List[float]]], 
+                 samples: List[Sample], dataset: Dataset, fitness_scores: List[float]) -> Tuple[List[Sample], List[float]]:
+        optimized_samples = self.optimize(samples, dataset, fitness_scores)
+        optimized_fitness = self.fitness(optimized_samples, dataset)
         samples, fitness_scores = step_func(samples, optimized_fitness)
         return samples, fitness_scores
 
 
 class LamarckStrategy(OptimizationStrategy):
-    def __init__(self, mutation_threshold: float) -> None:
-        super().__init__(mutation_threshold)
-
-    def activate(self, step_func: Callable[[List[Sample], List[float]], Tuple[List[Sample], List[float]]], samples: List[Sample], fitness_scores: List[float]) -> Tuple[List[Sample], List[float]]:
-        optimized_samples = self.optimize(samples, fitness_scores)
-        optimized_fitness = self.fitness(optimized_samples)
+    def activate(self, step_func: Callable[[List[Sample], List[float]], Tuple[List[Sample], List[float]]], 
+                 samples: List[Sample], dataset: Dataset, fitness_scores: List[float]) -> Tuple[List[Sample], List[float]]:
+        optimized_samples = self.optimize(samples, dataset, fitness_scores)
+        optimized_fitness = self.fitness(optimized_samples, dataset)
         samples, fitness_scores = step_func(optimized_samples, optimized_fitness)
         return samples, fitness_scores

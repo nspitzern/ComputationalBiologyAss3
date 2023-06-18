@@ -2,12 +2,12 @@ from typing import List
 from math import floor
 from random import choices, sample
 
-from src.genetic_algo.sample import Sample
+from src.common.base_sample import BaseSample
 
 
 class Selector:
     @staticmethod
-    def select_elite(samples, fitness_scores, percentile: float) -> List[Sample]:
+    def select_elite(samples, fitness_scores, percentile: float) -> List[BaseSample]:
         """
         Returns a list of top percentile samples.
         
@@ -28,5 +28,5 @@ class Selector:
         return sample(range(len(arr)), n)
     
     @staticmethod
-    def choose_n_weighted_random(arr: List, weights: List[float], n: int) -> List[Sample]:
+    def choose_n_weighted_random(arr: List, weights: List[float], n: int) -> List[BaseSample]:
         return choices(arr, weights, k=n)

@@ -2,8 +2,8 @@ from src.dataset import Dataset
 from src.network import load_network
 
 if __name__ == '__main__':
-    dataset = Dataset('nn0.txt')
-    net = load_network('wnet0.json')
+    dataset = Dataset('nn1.txt')
+    net = load_network('wnet1.json')
 
     count = 0
     preds = []
@@ -17,5 +17,5 @@ if __name__ == '__main__':
         preds.append(str(pred))
 
     print(f'acc: {count / len(dataset)}')
-    with open('predictions0', 'w') as f:
+    with open('predictions1', 'w') as f:
         f.write('\n'.join(preds))

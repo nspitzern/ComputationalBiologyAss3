@@ -10,6 +10,7 @@ class ActivationFunctionType(StrEnum):
     SIGMOID = 'sigmoid'
     TANH = 'tanh'
     SWISH = 'swish'
+    LEAKY_RELU = 'leaky_relu'
 
     @staticmethod
     def get_activation(a_type: str):
@@ -17,7 +18,8 @@ class ActivationFunctionType(StrEnum):
             'relu': ReLU,
             'sigmoid': Sigmoid,
             'tanh': Tanh,
-            'swish': Swish
+            'swish': Swish,
+            'leaky_relu': LeakyReLU
         }
 
         return activations[a_type]
@@ -41,6 +43,18 @@ class ReLU(ActivationFunction):
 
     def __call__(self, x: np.ndarray) -> np.ndarray:
         return np.maximum(0, x)
+
+
+class LeakyReLU(ActivationFunction):
+    def __init__(self, a: float) -> None:
+        super().__init__(ActivationFunctionType.RELU)
+        self.a = a
+
+    def __call__(self, x: np.ndarray) -> np.ndarray:
+        if x >= 0:
+            return x
+        else:
+            return self.a * x
 
 
 class Sigmoid(ActivationFunction):

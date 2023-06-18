@@ -3,7 +3,7 @@ import random
 from typing import List
 from random import randint
 
-from src.genetic_algo.sample import Sample
+from src.genetic_algo.train_net.sample import Sample
 from src.genetic_algo.selector import Selector
 
 
