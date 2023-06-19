@@ -11,16 +11,21 @@ class Sample(BaseSample):
         self.__activations = [Swish] * (len(self.__layer_dims) - 1)
         self.__net_optional_sizes = net_optional_sizes
         self.__threshold = mutation_threshold
+        self.best_sample: BaseSample = None
+        self.best_score: int = 0
     
     @property
     def network(self):
         return Network(self.__layer_dims, self.__activations)
     
     def mutate(self) -> None:
-        for i in range(len(self.__layer_dims)):
+        for i in range(1, len(self.__layer_dims)):
             if random() > self.__threshold:
                 new_dim = choice(self.__net_optional_sizes)
                 self.__layer_dims[i] = new_dim
+    
+    def save(self, filepath: str) -> None:
+        self.best_sample.save(filepath)
     
     def __getitem__(self, item):
         return self.__layer_dims[item]
@@ -37,7 +42,11 @@ class Sample(BaseSample):
         layer_dims: List[int] = []
         layer_dims.append(sample_size)
 
-        # Randomly add layer sizes
+        # Add at least one layer size to the list
+        selection = choice(net_optional_sizes)
+        layer_dims.append(selection)
+
+        # Randomly add additional layer sizes
         prob: float = random()
         while prob > threshold:
             selection = choice(net_optional_sizes)

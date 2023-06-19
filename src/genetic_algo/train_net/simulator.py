@@ -108,6 +108,9 @@ class Simulator:
             f.write(f'minimum mutation magnitude: {self.__args.mutation.mutation_magnitude}{os.linesep}')
 
     def __plot_current(self, history: SimulationHistory):
+        if self.__silent:
+            return
+        
         best_overall = max(history.best)
         plt.title(f'Best fitness: {best_overall}\nMethod: {GeneticAlgorithmType.map_to_str(self.algo_type)}, Population Size: {self.__num_samples},\n Fitness Calls: {self.__strategy.fitness_calls}, Mutation Ratio: {self.__args.mutation.mutation_percentage * 100}%')
         plt.plot(history.worst, label='Worst Fitness')
@@ -154,8 +157,9 @@ class Simulator:
         best_score = 0
         filename: str = f'{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
 
-        plt.figure(figsize=(8, 6), dpi=70)
-        plt.title(f'Initial mutation percentage: {self.__args.mutation.mutation_percentage * 100}%, elite percentile: {self.__elite_percentile * 100}%')
+        if not self.__silent:
+            plt.figure(figsize=(8, 6), dpi=70)
+            plt.title(f'Initial mutation percentage: {self.__args.mutation.mutation_percentage * 100}%, elite percentile: {self.__elite_percentile * 100}%')
  
         # Compute fitness
         train_fitness_scores = self.__strategy.fitness(samples, self.__train_dataset)
@@ -179,6 +183,7 @@ class Simulator:
 
             # Save best results until now
             if best_score < max(test_fitness_scores):
+                best_score = max(test_fitness_scores)
                 self.__save(samples, test_fitness_scores, filename)
 
             # Shuffle train dataset so we don't overfit

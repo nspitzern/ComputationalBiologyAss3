@@ -1,2 +1,3 @@
 class BaseSample:
-    pass
+    def save(self, filepath: str) -> None:
+        pass
