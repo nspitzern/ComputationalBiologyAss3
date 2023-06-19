@@ -32,7 +32,7 @@ class SimulationArgs:
 
 
 class Simulator:
-    def __init__(self, algo_type: GeneticAlgorithmType, num_samples: int, dataset: Dataset, output_dir_path: str, 
+    def __init__(self, algo_type: GeneticAlgorithmType, num_samples: int, num_inner_samples: int, dataset: Dataset, output_dir_path: str, 
                  simulation_args: SimulationArgs, train_ratio: int = 0.7, max_steps: int = -1, plot: bool = False) -> None:
         self.__args: SimulationArgs = simulation_args
         self.__fitness_goal: float = simulation_args.fitness_goal
@@ -44,7 +44,7 @@ class Simulator:
         self.__train_ratio = train_ratio
         self.__plot = plot
 
-        self.__train_simulator = TrainSimulator(self.algo_type, self.__num_samples, self.__dataset, 
+        self.__train_simulator = TrainSimulator(self.algo_type, num_inner_samples, self.__dataset, 
                                                 self.__output_dir_path, self.__args, train_ratio=self.__train_ratio, 
                                                 max_steps=max_steps, silent=True, plot=self.__plot)
         self.__strategy = GeneticAlgorithmType.get_strategy(algo_type, self.__train_simulator, self.__args.mutation.mutation_function)
