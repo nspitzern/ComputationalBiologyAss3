@@ -107,15 +107,16 @@ class Simulator:
             f.write(f'minimum mutation threshold: {self.__args.mutation.mutation_threshold}{os.linesep}')
             f.write(f'minimum mutation magnitude: {self.__args.mutation.mutation_magnitude}{os.linesep}')
 
-    def __plot_current(self, history: SimulationHistory):
+    def __plot_current(self, train_history: SimulationHistory, test_history: SimulationHistory):
         if self.__silent:
             return
         
-        best_overall = max(history.best)
+        best_overall = max(test_history.best)
         plt.title(f'Best fitness: {best_overall}\nMethod: {GeneticAlgorithmType.map_to_str(self.algo_type)}, Population Size: {self.__num_samples},\n Fitness Calls: {self.__strategy.fitness_calls}, Mutation Ratio: {self.__args.mutation.mutation_percentage * 100}%')
-        plt.plot(history.worst, label='Worst Fitness')
-        plt.plot(history.average, label='Avg Fitness')
-        plt.plot(history.best, label='Best Fitness')
+        # plt.plot(history.worst, label='Worst Fitness')
+        # plt.plot(history.average, label='Avg Fitness')
+        plt.plot(train_history.best, label='Best train Fitness')
+        plt.plot(test_history.best, label='Best test Fitness')
         plt.xlabel('Generation number')
         plt.ylabel('Fitness Score %')
         plt.legend(loc='upper right', bbox_to_anchor=(1, 1))
@@ -152,7 +153,8 @@ class Simulator:
         return samples, fitness_scores
     
     def __run_logic(self, samples: List[Sample]) -> Tuple[List[float], List[Sample]]:
-        history: SimulationHistory = SimulationHistory()
+        train_history: SimulationHistory = SimulationHistory()
+        test_history: SimulationHistory = SimulationHistory()
         step = 0
         best_score = 0
         filename: str = f'{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
@@ -168,8 +170,9 @@ class Simulator:
         
         self.__log(f'Mutation rate: {self.__args.mutation.mutation_percentage}')
 
-        self.__add_current_iteration_data(test_fitness_scores, history)
-        self.__plot_current(history)
+        self.__add_current_iteration_data(train_fitness_scores, train_history)
+        self.__add_current_iteration_data(test_fitness_scores, test_history)
+        self.__plot_current(train_history, test_history)
         plt.cla()
 
         while self.__should_run(step, test_fitness_scores):
@@ -178,8 +181,9 @@ class Simulator:
             test_fitness_scores = self.__strategy.fitness(samples, self.__test_dataset)
             self.__log(f'Max fitness: {max(test_fitness_scores)}')
 
-            self.__add_current_iteration_data(test_fitness_scores, history)
-            self.__plot_current(history)
+            self.__add_current_iteration_data(train_fitness_scores, train_history)
+            self.__add_current_iteration_data(test_fitness_scores, test_history)
+            self.__plot_current(train_history, test_history)
 
             # Save best results until now
             if best_score < max(test_fitness_scores):
@@ -193,7 +197,7 @@ class Simulator:
 
             step += 1
 
-        self.__plot_current(history)
+        self.__plot_current(train_history, test_history)
         self.__save(samples, test_fitness_scores, filename)
         return test_fitness_scores, samples
 

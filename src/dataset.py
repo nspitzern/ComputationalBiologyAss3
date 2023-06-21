@@ -7,14 +7,14 @@ from src.data_parser import load_data_file, DataItem
 
 
 class Dataset:
-    def __init__(self, data_filepath: str = '', data_items: List[DataItem] = None, batch_size :int = 128, should_shuffle: bool = False):
+    def __init__(self, data_filepath: str = '', data_items: List[DataItem] = None, batch_size :int = 128):
         if data_items:
             self.__items = data_items
         elif data_filepath != '':
             self.__items = load_data_file(data_filepath)
         else:
             raise ValueError('Dataset not provided with data to load')
-        self.__should_shuffle = should_shuffle
+        shuffle(self.__items)
         self.batch_size = batch_size
 
     def __len__(self) -> int:
@@ -36,9 +36,6 @@ class Dataset:
         batch_l = [item.label for item in self.__items[reminder:]]
 
         return np.vstack(batch_s), np.vstack(batch_l)
-
-    # def __iter__(self):
-    #     return (t for t in self.__items)
 
     def shuffle(self):
         shuffle(self.__items)
