@@ -14,7 +14,7 @@ class Evolver:
         s1, s2 = Selector.choose_n_weighted_random(samples, fitness_scores, 2)
         i = randint(0, s1.network_length - 1)
         
-        cross1, cross2 = copy.deepcopy(s1), copy.deepcopy(s1)
+        cross1, cross2 = copy.deepcopy(s1), copy.deepcopy(s2)
 
         # Swap one layer
         layer_1, layer_2 = s1[i], s2[i]
@@ -28,7 +28,7 @@ class Evolver:
         s1, s2 = Selector.choose_n_weighted_random(samples, fitness_scores, 2)
         i = randint(1, s1.network_length - 1)
 
-        cross1, cross2 = copy.deepcopy(s1), copy.deepcopy(s1)
+        cross1, cross2 = copy.deepcopy(s1), copy.deepcopy(s2)
         
         # Swap one part of the sample (multiple layers)
         layer_1_1, layer_2_1 = s1[:i], s2[:i]

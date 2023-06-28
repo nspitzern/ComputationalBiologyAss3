@@ -11,18 +11,15 @@ class Evolver:
     def single_crossover(samples: List[Sample], fitness_scores: List[float]) -> List[Sample]:
         # Choose 2 samples for crossover
         s1, s2 = Selector.choose_n_weighted_random(samples, fitness_scores, 2)
-        min_len = min(len(s1), len(s2))
-
-        if min_len < 3:
-            return []
         
-        i = randint(1, min_len - 2)
+        i = randint(1, len(s1) - 2)
+        j = randint(1, len(s2) - 2)
         
-        cross1, cross2 = copy.deepcopy(s1), copy.deepcopy(s1)
+        cross1, cross2 = copy.deepcopy(s1), copy.deepcopy(s2)
 
         # Swap one layer
-        dim_1, dim_2 = s1[i], s2[i]
-        cross1[i], cross2[i] = dim_2, dim_1
+        dim_1, dim_2 = s1[i], s2[j]
+        cross1[i], cross2[j] = dim_2, dim_1
 
         return [cross1, cross2]
     
@@ -63,7 +60,7 @@ class Evolver:
         samples_len = 0
 
         while samples_len < n:
-            co = Evolver.one_point_crossover(samples, fitness_scores)
+            co = Evolver.single_crossover(samples, fitness_scores)
 
             for o in co:
                 new_samples.append(o)
