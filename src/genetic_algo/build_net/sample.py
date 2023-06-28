@@ -48,7 +48,7 @@ class Sample(BaseSample):
 
         # Randomly add additional layer sizes
         prob: float = random()
-        while prob > threshold:
+        while prob > threshold and len(layer_dims) < 6:
             selection = choice(net_optional_sizes)
             layer_dims.append(selection)
             prob = random()
