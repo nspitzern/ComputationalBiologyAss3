@@ -7,7 +7,7 @@ if __name__ == '__main__':
     except FileNotFoundError:
         dataset = load_data_file('testnet0.txt', test=True)
 
-    net = load_network('wnet0.json')
+    net = load_network('wnet0')
 
     count = 0
     preds = []
@@ -22,8 +22,8 @@ if __name__ == '__main__':
 
     for sample in dataset:
         pred = net(sample)
-        preds.append(str(pred))
+        preds.append(str(*pred))
 
-    print(f'acc: {count / len(dataset)}')
+    # print(f'acc: {count / len(dataset)}')
     with open('predictions0', 'w') as f:
         f.write('\n'.join(preds))
