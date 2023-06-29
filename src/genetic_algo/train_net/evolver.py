@@ -42,7 +42,7 @@ class Evolver:
     def multiple_points_crossover(samples: List[Sample], fitness_scores: List[float]) -> List[Sample]:
         s1, s2 = Selector.choose_n_weighted_random(samples, fitness_scores, 2)
 
-        cross1, cross2 = copy.deepcopy(s1), copy.deepcopy(s1)
+        cross1, cross2 = copy.deepcopy(s1), copy.deepcopy(s2)
 
         for i, (layer1, layer2) in enumerate(zip(s1, s2)):
             p = random.random()
