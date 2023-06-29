@@ -31,7 +31,7 @@ class SimulationArgs:
 
 class Simulator:
     def __init__(self, algo_type: GeneticAlgorithmType, num_samples: int, dataset: Dataset, 
-                 output_dir_path: str, simulation_args: SimulationArgs, train_ratio: int = 0.7, max_steps: int = -1, silent: bool = False, plot: bool = False) -> None:
+                 output_dir_path: str, simulation_args: SimulationArgs, train_ratio: float = 0.7, max_steps: int = -1, silent: bool = False, plot: bool = False) -> None:
         self.__args: SimulationArgs = simulation_args
         self.__fitness_goal: float = simulation_args.fitness_goal
         self.__train_dataset, self.__test_dataset = split_train_test(dataset, train_ratio=train_ratio)
