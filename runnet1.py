@@ -7,7 +7,7 @@ if __name__ == '__main__':
     except FileNotFoundError:
         dataset = load_data_file('testnet1.txt', test=True)
 
-    net = load_network('wnet1')
+    net = load_network('wnet1.txt')
 
     count = 0
     preds = []
