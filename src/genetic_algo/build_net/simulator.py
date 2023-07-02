@@ -32,27 +32,32 @@ class SimulationArgs:
 
 
 class Simulator:
-    def __init__(self, algo_type: GeneticAlgorithmType, num_samples: int, num_inner_samples: int, dataset: Dataset, output_dir_path: str, 
-                 simulation_args: SimulationArgs, train_ratio: int = 0.7, max_steps: int = -1, plot: bool = False) -> None:
+    def __init__(self, algo_type: GeneticAlgorithmType, num_samples: int, num_inner_samples: int, train_dataset: Dataset, test_dataset: Dataset, 
+                 output_dir_path: str, simulation_args: SimulationArgs, max_steps: int = -1, plot: bool = False) -> None:
         self.__args: SimulationArgs = simulation_args
         self.__fitness_goal: float = simulation_args.fitness_goal
-        self.__dataset = dataset
+        self.__train_dataset, self.__test_dataset = train_dataset, test_dataset
         self.algo_type = algo_type
         self.__num_samples = num_samples
         self.__output_dir_path = output_dir_path
         self.__elite_percentile = simulation_args.elite_percentile
-        self.__train_ratio = train_ratio
         self.__plot = plot
 
-        self.__train_simulator = TrainSimulator(self.algo_type, num_inner_samples, self.__dataset, 
-                                                self.__output_dir_path, self.__args, train_ratio=self.__train_ratio, 
+        self.__train_simulator = TrainSimulator(self.algo_type, num_inner_samples, self.__train_dataset, self.__test_dataset, 
+                                                self.__output_dir_path, self.__args, 
                                                 max_steps=max_steps, silent=True, plot=self.__plot)
         self.__strategy = GeneticAlgorithmType.get_strategy(algo_type, self.__train_simulator, self.__args.mutation.mutation_function)
 
     def __should_run(self, fitness_scores: List[float]):
         return all([f < self.__fitness_goal for f in fitness_scores])
+    
+    def __save(self, samples: List[Sample], fitness_scores: List[float]):
+        # Save weights of best sample
+        i = np.argmax(fitness_scores)
+        best: Sample = samples[i]
+        best.save(self.__output_dir_path)
 
-    def __save(self, samples: List[Sample], fitness_scores: List[float], filename: str):
+    def __save_all(self, samples: List[Sample], fitness_scores: List[float], filename: str):
         # Create output directory if it doesn't exist
         os.makedirs(self.__output_dir_path, exist_ok=True)
 
@@ -148,19 +153,21 @@ class Simulator:
             # Save best results until now
             if best_score < max(fitness_scores):
                 best_score = max(fitness_scores)
-                self.__save(samples, fitness_scores, filename)
+                self.__save(samples, fitness_scores)
             
             plt.cla()
 
             step += 1
 
         self.__plot_current(history)
-        self.__save(samples, fitness_scores, filename)
+        self.__save(samples, fitness_scores)
         return fitness_scores, samples
 
     def run(self, net_optional_sizes: List[int]) -> Tuple[List[float], List[Sample]]:
         mutation_threshold = self.__args.mutation.mutation_threshold
 
+        print('Start training...')
+
         # Generate initial population
-        samples: List[Sample] = [Sample(len(self.__dataset[0].sample), net_optional_sizes, mutation_threshold) for _ in range(self.__num_samples)]
+        samples: List[Sample] = [Sample(len(self.__test_dataset[0].sample), net_optional_sizes, mutation_threshold) for _ in range(self.__num_samples)]
         return self.__run_logic(samples)

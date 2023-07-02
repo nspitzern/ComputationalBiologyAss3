@@ -5,8 +5,8 @@ import numpy as np
 from datetime import datetime
 from typing import Callable, List, Tuple
 
+from src.dataset import Dataset
 from src.common.simulation_history import SimulationHistory
-from src.dataset import Dataset, split_train_test
 from src.genetic_algo.train_net.evolver import Evolver
 from src.genetic_algo.train_net.sample import Sample
 from src.genetic_algo.selector import Selector
@@ -30,11 +30,11 @@ class SimulationArgs:
 
 
 class Simulator:
-    def __init__(self, algo_type: GeneticAlgorithmType, num_samples: int, dataset: Dataset, 
-                 output_dir_path: str, simulation_args: SimulationArgs, train_ratio: float = 0.7, max_steps: int = -1, silent: bool = False, plot: bool = False) -> None:
+    def __init__(self, algo_type: GeneticAlgorithmType, num_samples: int, train_dataset: Dataset, test_dataset: Dataset, 
+                 output_dir_path: str, simulation_args: SimulationArgs, max_steps: int = -1, silent: bool = False, plot: bool = False) -> None:
         self.__args: SimulationArgs = simulation_args
         self.__fitness_goal: float = simulation_args.fitness_goal
-        self.__train_dataset, self.__test_dataset = split_train_test(dataset, train_ratio=train_ratio)
+        self.__train_dataset, self.__test_dataset = train_dataset, test_dataset
         self.algo_type = algo_type
         self.__strategy = GeneticAlgorithmType.get_strategy(algo_type)
         self.__num_samples = num_samples
@@ -78,8 +78,17 @@ class Simulator:
             samples_len += len(co)
 
         return new_samples
+    
+    def __save(self, samples: List[Sample], fitness_scores: List[float]):
+        if self.__silent:
+            return
 
-    def __save(self, samples: List[Sample], fitness_scores: List[float], filename: str):
+        # Save weights of best sample
+        i = np.argmax(fitness_scores)
+        best: Sample = samples[i]
+        best.save(self.__output_dir_path)
+
+    def __save_all(self, samples: List[Sample], fitness_scores: List[float], filename: str):
         if self.__silent:
             return
         
@@ -188,7 +197,7 @@ class Simulator:
             # Save best results until now
             if best_score < max(test_fitness_scores):
                 best_score = max(test_fitness_scores)
-                self.__save(samples, test_fitness_scores, filename)
+                # self.__save(samples, test_fitness_scores)
 
             # Shuffle train dataset so we don't overfit
             self.__train_dataset.shuffle()
@@ -198,13 +207,15 @@ class Simulator:
             step += 1
 
         self.__plot_current(train_history, test_history)
-        self.__save(samples, test_fitness_scores, filename)
+        self.__save(samples, test_fitness_scores)
         return test_fitness_scores, samples
 
     def run(self, layer_dims: List[int], activations: List[ActivationFunction], 
             mutation_function: Callable[[Network, float, float], None]) -> Tuple[List[float], List[Sample]]:
         mutation_threshold = self.__args.mutation.mutation_threshold
         mutation_magnitude = self.__args.mutation.mutation_magnitude
+
+        print('Start training...')
 
         # Generate initial population
         samples: List[Sample] = [Sample(Network(layer_dims, activations), mutation_function, mutation_threshold, mutation_magnitude) for _ in range(self.__num_samples)]
